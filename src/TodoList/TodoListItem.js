@@ -7,6 +7,7 @@ import Tooltip from '@mui/material/Tooltip';
 import TaskAltIcon from '@mui/icons-material/TaskAlt';
 import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
 import DeleteIcon from '@mui/icons-material/DeleteOutline';
+import MoveIcon from '@mui/icons-material/PanTool';
 import EditIcon from '@mui/icons-material/EditOutlined';
 import SaveIcon from '@mui/icons-material/Save';
 import CancelIcon from '@mui/icons-material/Block';
@@ -53,7 +54,12 @@ const TodoListItem = ({
 
   const handleEditSave = () => {
     if (isEditMode) {
-      updateTask(data.id, {description: text});
+      if (text === '') {
+        return;
+      }
+      if (text !== data.description) {
+        updateTask(data.id, {description: text});
+      }
       setIsEditMode(false);
     } else {
       setIsEditMode(true);
@@ -102,6 +108,13 @@ const TodoListItem = ({
             {isEditMode ? (<CancelIcon />) : (<DeleteIcon />)}
           </IconButton>
         </Tooltip>
+
+        <Tooltip title={'Drag to Move'}>
+          <IconButton disableRipple={true} >
+            <MoveIcon style={{color: 'grey', cursor: 'move'}}/>
+          </IconButton>
+        </Tooltip>
+
       </Card>
     </Fade>
   );

@@ -8,6 +8,8 @@ import LoadingButton from '@mui/lab/LoadingButton';
 import AddIcon from '@mui/icons-material/Add';
 import SearchIcon from '@mui/icons-material/Search';
 import Tooltip from '@mui/material/Tooltip';
+import {SortableContainer, SortableElement} from 'react-sortable-hoc';
+import {arrayMoveImmutable} from 'array-move';
 
 const TodoList = () => {
   const [description, setDescription] = useState('');
@@ -51,7 +53,10 @@ const TodoList = () => {
     })
       .then(res => res.json())
       .then(data => {
-        updateSingleTask(data)
+        // sort and save description will not happen together in this application
+        if (!data.position) {
+          updateSingleTask(data)
+        }
       })
   };
 
@@ -99,7 +104,7 @@ const TodoList = () => {
       .then(data => {
         setTasks(data);
         // force display the loading animation, otherwise the icon would looks like flashing
-        setTimeout(() => {setIsSearching(false);}, 300);
+        setTimeout(() => { setIsSearching(false); }, 300);
       })
   };
 
@@ -129,10 +134,39 @@ const TodoList = () => {
     loadList();
   }, []);
 
+  const SortableItem = SortableElement(({value}) => 
+    (<TodoListItem
+      data={value}
+      updateTask={updateTask}
+      deleteTask={deleteTask}
+    />)
+  );
+
+  const SortableList = SortableContainer(({items}) => {
+    return (
+      <div style={{width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
+        {items.map((value, index) => (
+          <SortableItem key={`item-${value.id}`} index={index} value={value} />
+        ))}
+      </div>
+    );
+  });
+
+  const handleDrop =({oldIndex, newIndex}) => {
+    if (oldIndex === newIndex) {
+      return;
+    }
+    const taskToUpdate = tasks.find(item => item.position === oldIndex);
+    if (taskToUpdate && taskToUpdate.id) {
+      setTasks(arrayMoveImmutable(tasks, oldIndex, newIndex));
+      updateTask(taskToUpdate.id, {position: newIndex});
+    }
+  };
+
   return (
     <div style={{ display: 'flex', margin: 20, alignItems: 'center', flexDirection: 'column' }}>
       <div style={{ display: 'flex' }}>
-        <Paper sx={{ p: '2px 4px', display: 'flex', alignItems: 'center', width: 500 }}
+        <Paper sx={{ p: '2px 4px', display: 'flex', alignItems: 'center', width: 400 }}
         >
           <InputBase
             sx={{ ml: 1, flex: 1 }}
@@ -155,21 +189,10 @@ const TodoList = () => {
 
         </Paper>
       </div>
-      {tasks.length === 0 && !isLoading && (<div style={{marginTop: 20}}>No tasks found</div>)}
-      {tasks.length === 0 && isLoading && (<div style={{marginTop: 20}}>Loading ...</div>)}
-      {tasks.map((item, index) => {
-        return (
-          <div draggable
-          key={`task_${index}_${item.id}`}
-          >
-            <TodoListItem
-              data={item}
-              updateTask={updateTask}
-              deleteTask={deleteTask}
-            />
-          </div>
-        )
-      })}
+      {tasks.length === 0 && !isLoading && (<div style={{ marginTop: 20 }}>No tasks found</div>)}
+      {tasks.length === 0 && isLoading && (<div style={{ marginTop: 20 }}>Loading ...</div>)}
+
+      <SortableList items={tasks} onSortEnd={handleDrop} distance={2}/>
 
     </div>
   );
