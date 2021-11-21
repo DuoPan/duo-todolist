@@ -39,7 +39,7 @@ const TopBar = ({
 
       <InputBase
         sx={{ ml: 1, flex: 1 }}
-        placeholder='Enter new task or search keywords'
+        placeholder='Enter new task or keyword'
         value={description}
         onChange={(e) => { setDescription(e.target.value) }}
       />
